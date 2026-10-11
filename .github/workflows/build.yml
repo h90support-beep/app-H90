@@ -1,24 +1,25 @@
-name: Build H90 Main App APK
+name: Build H90 APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
+    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Source
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Setup Java
+      - name: Setup Java JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -27,36 +28,25 @@ jobs:
       - name: Prepare www folder
         run: |
           mkdir -p www
-          cp index.html www/
-          cp style.css www/
-          cp rooms.css www/
-          cp movies-styles.css www/
-          cp script.js www/
-          cp sounds.js www/
-          cp security.js www/
-          cp channels-server1.js www/
-          cp channels-server2.js www/
-          cp channels.js www/
-          cp player.js www/
-          cp matches.js www/
-          cp teams.js www/
-          cp rooms.js www/
-          cp movies-api.js www/
-          cp series-api.js www/
-          cp fun.js www/
-          cp manifest.json www/
-          cp H90.jpg www/
-          cp firebase-config.js www/
-          cp firebase-messaging-sw.js www/ || true
-          cp service-worker.js www/ || true
+          cp -r *.html www/ 2>/dev/null || true
+          cp -r *.css www/ 2>/dev/null || true
+          cp -r *.js www/ 2>/dev/null || true
+          cp -r *.json www/ 2>/dev/null || true
+          cp -r *.png www/ 2>/dev/null || true
+          cp -r *.jpg www/ 2>/dev/null || true
+          cp -r *.jpeg www/ 2>/dev/null || true
+          cp -r *.svg www/ 2>/dev/null || true
+          cp -r *.webp www/ 2>/dev/null || true
+          echo "📦 www folder contents:"
+          ls -la www/
 
-      - name: Install Deps
+      - name: Install Dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Add Android
+      - name: Add Android Platform
         run: npx cap add android
 
-      - name: Sync
+      - name: Sync Capacitor
         run: npx cap sync android
 
       - name: Add Queries for H90 Player
@@ -65,18 +55,26 @@ jobs:
           if ! grep -q "com.h90.player" "$MANIFEST"; then
             sed -i 's|</manifest>|<queries><package android:name="com.h90.player" /></queries></manifest>|' "$MANIFEST"
             echo "✅ Added <queries> for H90 Player"
+            echo "--- Verifying ---"
+            grep -A2 "<queries>" "$MANIFEST" || echo "⚠️ grep failed"
           else
             echo "ℹ️ <queries> already exists"
           fi
 
-      - name: Build
+      - name: Grant Execute Permission
+        run: chmod +x android/gradlew
+
+      - name: Build Debug APK
         working-directory: android
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: H90-Main-App-APK
+          name: H90-APK-Debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Show Result
+        run: |
+          echo "✅ APK Build Complete!"
+          ls -lh android/app/build/outputs/apk/debug/
