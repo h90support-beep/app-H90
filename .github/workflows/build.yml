@@ -17,7 +17,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -47,6 +46,7 @@ jobs:
           cp fun.js www/
           cp manifest.json www/
           cp H90.jpg www/
+          cp firebase-config.js www/
           cp firebase-messaging-sw.js www/ || true
           cp service-worker.js www/ || true
 
@@ -58,6 +58,16 @@ jobs:
 
       - name: Sync
         run: npx cap sync android
+
+      - name: Add Queries for H90 Player
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if ! grep -q "com.h90.player" "$MANIFEST"; then
+            sed -i 's|</manifest>|<queries><package android:name="com.h90.player" /></queries></manifest>|' "$MANIFEST"
+            echo "✅ Added <queries> for H90 Player"
+          else
+            echo "ℹ️ <queries> already exists"
+          fi
 
       - name: Build
         working-directory: android
