@@ -1,0 +1,72 @@
+name: Build H90 Main App APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Prepare www folder
+        run: |
+          mkdir -p www
+          cp index.html www/
+          cp style.css www/
+          cp rooms.css www/
+          cp movies-styles.css www/
+          cp script.js www/
+          cp sounds.js www/
+          cp security.js www/
+          cp channels-server1.js www/
+          cp channels-server2.js www/
+          cp channels.js www/
+          cp player.js www/
+          cp matches.js www/
+          cp teams.js www/
+          cp rooms.js www/
+          cp movies-api.js www/
+          cp series-api.js www/
+          cp fun.js www/
+          cp manifest.json www/
+          cp H90.jpg www/
+          cp firebase-messaging-sw.js www/ || true
+          cp service-worker.js www/ || true
+
+      - name: Install Deps
+        run: npm install --legacy-peer-deps
+
+      - name: Add Android
+        run: npx cap add android
+
+      - name: Sync
+        run: npx cap sync android
+
+      - name: Build
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: H90-Main-App-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
