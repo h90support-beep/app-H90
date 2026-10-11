@@ -1,7 +1,7 @@
 {
   "appId": "com.h90.app",
   "appName": "H90",
-  "webDir": ".",
+  "webDir": "www",
   "bundledWebRuntime": false,
   "android": {
     "allowMixedContent": true,
@@ -12,9 +12,7 @@
   "server": {
     "androidScheme": "https",
     "cleartext": true,
-    "allowNavigation": [
-      "*"
-    ]
+    "allowNavigation": ["*"]
   },
   "plugins": {
     "SplashScreen": {
@@ -32,8 +30,21 @@
       "backgroundColor": "#0a0a0f",
       "overlaysWebView": true
     },
-    "AppLauncher": {
-      "enabled": true
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#ff2d55",
+      "sound": "beep.wav"
+    },
+    "App": {
+      "deepLinks": [
+        {
+          "scheme": "h90player",
+          "host": "play"
+        }
+      ]
     }
   }
-}{}
+}
